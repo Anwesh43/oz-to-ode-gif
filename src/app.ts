@@ -1,5 +1,6 @@
-import {Canvas} from 'canvas'
+import {Canvas, CanvasRenderingContext2D} from 'canvas'
 import GIFEncoder from 'gifencoder'
+import {createWriteStream} from 'fs'
 
 const parts : number = 3 
 const scGap : number = 0.02 / parts 
@@ -122,11 +123,44 @@ class OzToOd {
 
     state : State = new State()
 
-    draw(context : CanvasRenderingContext2D) {
+    draw(context : CanvasRenderingContext2D, cb : Function) {
         DrawingUtil.drawOText(context, this.state.scale)
+        cb(context)
     }
 
     update(cb : Function) {
         this.state.update(cb)
+    }
+}
+
+class Renderer {
+
+    gifencoder : GIFEncoder
+    canvas : Canvas
+    context : CanvasRenderingContext2D
+    loop : Loop = new Loop()
+    oto : OzToOd = new OzToOd()
+
+    constructor() {
+        this.gifencoder = new GIFEncoder(w, h)
+        this.canvas = new Canvas(w, h)
+        this.context = this.canvas.getContext('2d')
+        this.gifencoder.setDelay(delay)
+        this.gifencoder.setQuality(100)
+        this.gifencoder.setRepeat(0)
+    }
+
+    render(fileName : string) {
+        this.gifencoder.createReadStream().pipe(createWriteStream(fileName))
+        this.gifencoder.start()
+        this.loop.start(() => {
+            this.oto.draw(this.context, (context : CanvasRenderingContext2D) => {
+                this.gifencoder.addFrame(context)
+            })
+            this.oto.update(() => {
+                this.loop.stop()
+                this.gifencoder.finish()
+            })
+        })
     }
 }
