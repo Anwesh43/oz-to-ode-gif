@@ -20,3 +20,22 @@ class State {
         }
     }
 }
+
+class Loop {
+    animated : boolean = false 
+    interval : number = 0
+
+    start(cb : Function) {
+        if (!this.animated) {
+            this.animated = true 
+            this.interval = setInterval(cb, 0)
+        }
+    }
+
+    stop() {
+        if (this.animated) {
+            this.animated = false 
+            clearInterval(this.interval)
+        }
+    }
+}
