@@ -1,0 +1,21 @@
+{
+  "name": "oz-to-ode-gif",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "tsc -p .",
+    "start": "node ./dist/app.js"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "canvas": "^2.6.1",
+    "gifencoder": "^2.0.1"
+  },
+  "devDependencies": {
+    "@types/gifencoder": "^2.0.0",
+    "typescript": "^4.1.3"
+  }
+}
