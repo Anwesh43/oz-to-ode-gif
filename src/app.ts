@@ -2,8 +2,8 @@ import {Canvas, CanvasRenderingContext2D} from 'canvas'
 import GIFEncoder from 'gifencoder'
 import {createWriteStream} from 'fs'
 
-const parts : number = 3 
-const scGap : number = 0.02 / parts 
+const parts : number = 8
+const scGap : number = 0.02 
 const delay : number = 20 
 const strokeFactor : number = 90 
 const backColor : string = "black"
@@ -77,11 +77,16 @@ class DrawingUtil {
         context : CanvasRenderingContext2D, 
         x : number, 
         y : number, 
-        r : number
+        r : number,
+        stroke : boolean
     ) {
         context.beginPath()
         context.arc(x, y, r, 0, 2 * Math.PI)
-        context.fill()
+        if (stroke) {
+            context.stroke()
+        } else {
+            context.fill()
+        }
     }
 
     static drawOText(
@@ -89,29 +94,32 @@ class DrawingUtil {
         scale : number
     ) {
         const sf : number = ScaleUtil.sinify(scale)
-        const sf1 : number = ScaleUtil.divideScale(sf, 0, parts)
-        const sf2 : number = ScaleUtil.divideScale(sf, 1, parts)
-        const sf3 : number = ScaleUtil.divideScale(sf, 2, parts)
-        const sf4 : number = ScaleUtil.divideScale(sf, 2, parts)
+        const sf1 : number = ScaleUtil.divideScale(sf, 3, parts)
+        const sf2 : number = ScaleUtil.divideScale(sf, 4, parts)
+        const sf3 : number = ScaleUtil.divideScale(sf, 5, parts)
         const text : string = "O"
         const size : number = Math.min(w, h) / 3
-        context.font = context.font.replace(/\d{2}/, `${size}`)
-        const tw : number = context.measureText(text).width
+        const tw : number = size * 1.2
         context.fillStyle = foreColor 
         context.strokeStyle = foreColor  
         context.lineCap = 'round'
-        context.lineWidth = Math.min(w, h) / strokeFactor 
+        context.lineWidth = size / 9 
         context.save()
-        context.translate(w / 2 - tw / 2, h / 2 - size / 4)
-        context.fillText(text, 0, 0)
+        context.translate(w / 2, h / 2)
+        DrawingUtil.drawDot(context, 0, 0, size, true)
+        context.lineWidth = 2 * size / 9
+        if (sf3 > 0) {
+            DrawingUtil.drawLine(context, -tw * sf3, -tw * sf3, tw * sf3, tw * sf3)
+        }
         for (var j =0 ; j < 2; j++) {
             context.save()
             context.scale(1 - 2 * j, 1)
             DrawingUtil.drawDot(
                 context, 
-                -tw / 3 + sf1 * (tw / 3), 
-                -size * 0.7 + size * 0.7 * sf2 - size * 0.7 * (1 - 2 * j) * sf3,
-                size / 9 
+                -tw / 2 + sf1 * (tw / 2) - sf3 * (tw), 
+                -size * 1.2 + size * 1.2 * sf2 - size * 1.2 * (1 - 2 * j) * sf3,
+                size / 9,
+                false 
             )
             context.restore()
         }
@@ -154,6 +162,8 @@ class Renderer {
         this.gifencoder.createReadStream().pipe(createWriteStream(fileName))
         this.gifencoder.start()
         this.loop.start(() => {
+            this.context.fillStyle = backColor
+            this.context.fillRect(0, 0, w, h)
             this.oto.draw(this.context, (context : CanvasRenderingContext2D) => {
                 this.gifencoder.addFrame(context)
             })
@@ -164,3 +174,6 @@ class Renderer {
         })
     }
 }
+
+const renderer : Renderer = new Renderer()
+renderer.render('test.gif')
